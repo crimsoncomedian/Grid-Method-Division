@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Grid Method Division</title>
+<style>
+:root{font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#18253a;background:#f5f7fb}*{box-sizing:border-box}body{margin:0;padding:20px}.app{max-width:640px;margin:auto}
+h1{font-size:clamp(22px,4vw,30px);margin:0 0 6px;text-align:center}.sub{color:#5e6d81;font-size:14px;text-align:center;margin:0 auto 6px;max-width:460px}
+.card{background:#fff;border:1px solid #d9e1eb;border-radius:16px;padding:18px;margin:12px 0;box-shadow:0 2px 8px #152b4310}
+.tray{display:flex;gap:14px;justify-content:center;align-items:center;min-height:84px;border:2px dashed #afbed1;border-radius:14px;padding:10px;color:#8491a2;font-size:14px}
+.tray.over,.cells.over{border-color:#5144c6;background:#f0eefc}
+.plus{font-size:40px;font-weight:800;color:#5e6d81;line-height:1}
+.tray.arrow{font-size:34px;color:#afbed1}
+.tile{font-size:34px;font-weight:800;padding:10px 20px;border:2px solid #5144c6;background:#fff;color:#18253a;border-radius:12px;cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;font-variant-numeric:tabular-nums;box-shadow:0 2px 6px #5144c622}
+.tile:focus-visible,.slot:focus-visible{outline:3px solid #7268e4;outline-offset:2px}
+.ghost{position:fixed;z-index:50;pointer-events:none;opacity:.9;margin:0}
+.frame{display:flex;flex-direction:column;align-items:center;margin:6px 0 2px;font-variant-numeric:tabular-nums}
+.row{display:flex;align-items:center}
+.sg{width:40px;text-align:center;font-size:38px;font-weight:700;color:#5e6d81}
+.cells{display:flex;border:2px solid transparent;border-radius:12px}
+.cells.empty{border-color:#afbed1;border-style:dashed;min-height:68px}
+.slot[role=button]{cursor:grab;touch-action:none}
+.c{width:64px;height:68px;display:flex;align-items:center;justify-content:center;font-size:44px;font-weight:800;border-radius:10px}
+.c.act{background:#eeeafe}
+.row.cr .c{height:44px}
+.row.top,.row.bot{margin:5px 0}
+.row.bot .cells{border-bottom:4px solid #18253a;border-radius:0 0 4px 4px;padding-bottom:2px}
+.row.bot .cells.empty{border-radius:12px;padding:0}
+.row.ar{margin-top:8px}
+.abox,.afix{width:56px;height:62px;font-size:38px;font-weight:800;text-align:center;border-radius:10px;font-family:inherit;padding:0}
+.abox{border:3px solid #5144c6;background:#fff;color:#18253a}
+.abox:focus{outline:3px solid #b6aef5;outline-offset:1px}
+.afix{display:flex;align-items:center;justify-content:center;border:3px solid #2e9e62;background:#f1faf5}
+.afix.wait{border:2px dashed #cdd6e2;background:transparent}
+.cbox,.cfix{width:38px;height:38px;font-size:22px;font-weight:800;text-align:center;border-radius:8px;font-family:inherit;padding:0}
+.cbox{border:2px solid #e08a1e;background:#fff8ee;color:#18253a}
+.cbox:focus{outline:3px solid #f6cf9c;outline-offset:1px}
+.cfix{display:flex;align-items:center;justify-content:center;border:2px solid #e08a1e;background:#fff8ee;color:#a35d0b}
+.msg{text-align:center;min-height:26px;font-weight:700;margin-top:10px;color:#bb3d3d}.msg.good{color:#18845a;font-size:18px}
+.help{text-align:center;color:#5e6d81;font-size:14px;margin-top:8px}
+.next{display:block;margin:6px auto 0;border:0;border-radius:10px;background:#5144c6;color:#fff;font-weight:700;font-size:16px;padding:12px 20px;cursor:pointer}
+.title2{text-align:center;font-weight:700;margin:0 0 10px}
+@media(max-width:400px){.c{width:54px}.sg{width:30px}.tile{font-size:28px;padding:8px 14px}.abox,.afix{width:48px}}
+
+:root{--gw:116px}
+.app{max-width:720px}
+.gd{display:grid;justify-content:center;align-items:stretch;margin:10px auto;font-variant-numeric:tabular-nums}
+.gd .dvs{grid-column:1;grid-row:2 / span 3;display:flex;align-items:center;justify-content:center;padding:0 16px 0 4px;font-size:56px;font-weight:800}
+.gd .q{display:flex;align-items:center;justify-content:center;height:62px;font-size:44px;font-weight:800;color:#18253a}
+.gd .gc{display:flex;align-items:center;justify-content:flex-end;gap:6px;height:62px;padding:0 12px;font-size:42px;font-weight:800;border-left:3px solid #18253a;border-right:3px solid #18253a;background:#fff}
+.gd .gc.top{border-top:3px solid #18253a}
+.gd .gc.mid{border-bottom:3px solid #18253a;color:#18253a}
+.gd .gc.bot{border-bottom:3px solid #18253a;color:#5144c6}
+.gd .gc.hl{background:#eeeafe}
+.gd .gc .sn{margin-right:auto;font-size:28px;color:#5e6d81;font-weight:700}
+.gd .pre{display:inline-flex;align-items:center;justify-content:center;min-width:34px;height:34px;padding:0 5px;font-size:20px;font-weight:800;border:2px solid #e08a1e;border-radius:8px;background:#fff8ee;color:#a35d0b;align-self:flex-start;margin-top:6px}
+.gd .gc.bot.bring{cursor:pointer;background:#fff8ee;color:#a35d0b}
+.gd input{width:100%;height:50px;font-size:34px;font-weight:800;text-align:right;padding:0 8px;border:3px solid #5144c6;border-radius:10px;background:#fff;font-family:inherit;font-variant-numeric:tabular-nums}
+.gd input.qi{text-align:center;padding:0;width:62px;border-color:#e08a1e;background:#fff8ee}
+.gd input:focus{outline:3px solid #b6aef5;outline-offset:1px}
+.gd .fg{display:flex;align-items:center;justify-content:center;height:44px}
+.hand{font-size:30px;line-height:1;animation:bob 1s ease-in-out infinite}
+@keyframes bob{0%,100%{transform:translateY(5px)}50%{transform:translateY(-4px)}}
+.shake{animation:wig .4s}
+@keyframes wig{0%,100%{transform:translateX(0)}20%{transform:translateX(-7px)}40%{transform:translateX(7px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
+.btns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:12px}
+.chk{border:1px solid #5144c6;border-radius:9px;background:#5144c6;color:#fff;padding:10px 16px;font-size:16px;font-weight:700;cursor:pointer}
+.chk.alt{background:#fff;color:#5144c6}
+.chk:disabled{opacity:.4;cursor:not-allowed}
+[hidden]{display:none!important}
+.help b{color:#18253a}
+@media(max-width:560px){:root{--gw:64px}.gd .gc{font-size:30px;padding:0 6px}.gd .q{font-size:34px}.gd .dvs{font-size:40px;padding:0 8px 0 0}.gd input{font-size:26px;height:44px}.gd input.qi{width:50px}.gd .pre{min-width:26px;height:26px;font-size:15px}.gd .gc .sn{font-size:20px}}
+</style>
+</head>
+<body><main class="app">
+<h1>Grid Method: Division</h1>
+<section class="card">
+ <div class="gd" id="gd"></div>
+ <div class="btns" id="ctl"><button class="chk" id="chk" type="button">Check</button><button class="chk alt" id="undo" type="button">Undo</button></div>
+ <div class="msg" id="msg" role="status" aria-live="polite"></div>
+ <div class="help" id="help"></div>
+</section>
+<button class="next" id="next" type="button">New problem &#8635;</button>
+</main>
+<script>
+(()=>{
+const $=id=>document.getElementById(id);
+let dividend=6542,d=5,D=[],steps=[],idx=0,result={q:0,r:0},justUp=null;
+function build(a,b){
+ const digits=String(a).split('').map(Number),st=[];let rem=0;const qs=[];
+ digits.forEach((x,i)=>{
+  const cur=rem*10+x,q=Math.floor(cur/b),pr=q*b,r2=cur-pr;
+  if(i>0)st.push({k:'up',col:i,want:rem});
+  st.push({k:'q',col:i,want:q,cur});
+  st.push({k:'p',col:i,want:pr,q,cur});
+  st.push({k:'r',col:i,want:r2,cur,pr});
+  qs.push(q);rem=r2;
+ });
+ return {digits,steps:st,qs,rem};
+}
+function setup(a,b){
+ dividend=a;d=b;const r=build(a,b);D=r.digits;steps=r.steps;idx=0;result={q:+r.qs.join(''),r:r.rem};
+ $('msg').textContent='';$('msg').className='msg';render();
+}
+function render(){
+ const nd=D.length,cur=idx<steps.length?steps[idx]:null,finished=cur===null;
+ const gd=$('gd');gd.style.gridTemplateColumns=`auto repeat(${nd},var(--gw))`;
+ const items=[];const add=(row,col,html,cls='')=>items.push(`<div class="${cls}" style="grid-row:${row};grid-column:${col}">${html}</div>`);
+ // gather what has been done
+ const pre={},qv={},pv={},rv={};
+ steps.slice(0,idx).forEach(s=>{if(s.k==='up')pre[s.col]=s.want;else if(s.k==='q')qv[s.col]=s.want;else if(s.k==='p')pv[s.col]=s.want;else rv[s.col]=s.want;});
+ const activeCol=cur?(cur.k==='up'?cur.col:cur.col):-1;
+ items.push(`<div class="dvs" style="grid-row:2 / span 3;grid-column:1">${d}</div>`);
+ for(let i=0;i<nd;i++){
+  const c=2+i;const hl=i===activeCol&&cur;
+  // quotient row
+  if(qv[i]!==undefined)add(1,c,qv[i],'q');
+  else if(cur&&cur.k==='q'&&cur.col===i)add(1,c,`<input class="qi" id="inQ" inputmode="numeric" maxlength="1" autocomplete="off" aria-label="Quotient digit">`,'q');
+  else add(1,c,'','q');
+  // number row (remainder carried up + the dividend digit)
+  const pr=pre[i]!==undefined?`<span class="pre${justUp&&justUp.col===i?' new':''}">${pre[i]}</span>`:'';
+  add(2,c,`${pr}<span>${D[i]}</span>`,`gc top${hl?' hl':''}`);
+  // product row
+  let prod='';
+  if(pv[i]!==undefined)prod=`<span class="sn">\u2212</span><span>${pv[i]}</span>`;
+  else if(cur&&cur.k==='p'&&cur.col===i)prod=`<span class="sn">\u2212</span><input id="inNum" inputmode="numeric" maxlength="3" autocomplete="off" aria-label="Product" style="width:calc(100% - 28px)">`;
+  add(3,c,prod,`gc mid${hl?' hl':''}`);
+  // remainder row
+  let rem='',bring=false;
+  if(rv[i]!==undefined){rem=`<span>${rv[i]}</span>`;}
+  if(cur&&cur.k==='r'&&cur.col===i)rem=`<input id="inNum" inputmode="numeric" maxlength="2" autocomplete="off" aria-label="Remainder">`;
+  if(cur&&cur.k==='up'&&cur.col-1===i){bring=true;}
+  add(4,c,rem,`gc bot${hl?' hl':''}${bring?' bring':''}${bring?'':''}`);
+  // finger under the remainder that must be brought up
+  add(5,c,bring?'<span class="hand" aria-hidden="true">\uD83D\uDC46</span>':'','fg');
+ }
+ gd.innerHTML=items.join('');
+ if(justUp){playUp(justUp);justUp=null;}
+ const msg=$('msg');
+ if(finished){msg.className='msg good';msg.textContent=`\u2713 Correct! ${dividend} \u00F7 ${d} = ${result.q}${result.r?' R '+result.r:''}. Great work!`;$('help').textContent='';}
+ else{if(msg.classList.contains('good')){msg.className='msg';msg.textContent='';}
+  let h='';
+  if(cur.k==='up')h='Bring the remainder up.';
+  else if(cur.k==='q')h=`How many <b>${d}s</b> fit in <b>${(pre[cur.col]!==undefined?String(pre[cur.col]):'')+D[cur.col]}</b>?`;
+  else if(cur.k==='p')h=`<b>${cur.q} \u00D7 ${d}</b>`;
+  else h=`<b>${cur.cur} \u2212 ${cur.pr}</b>`;
+  $('help').innerHTML=h;}
+ $('ctl').hidden=finished;$('undo').disabled=idx===0;
+ $('chk').hidden=!(cur&&cur.k!=='up');
+ const iq=$('inQ'),inn=$('inNum');
+ if(iq){iq.oninput=()=>check();iq.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();check();}};iq.focus();}
+ if(inn){inn.oninput=()=>{inn.value=inn.value.replace(/\D/g,'');if(inn.value.length>=String(cur.want).length)check();};inn.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();check();}};inn.focus();}
+ const br=gd.querySelector('.gc.bot.bring');
+ if(br)br.onclick=()=>{justUp={src:br.getBoundingClientRect(),col:cur.col};idx++;setMsg('');render();};
+}
+function playUp(u){
+ if(matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+ const el=document.querySelector('#gd .pre.new');if(!el)return;
+ const dst=el.getBoundingClientRect(),src=u.src;
+ const sx=src.left+src.width/2,sy=src.top+src.height/2,dx2=dst.left+dst.width/2,dy2=dst.top+dst.height/2;
+ const L=Math.hypot(dx2-sx,dy2-sy),ang=Math.atan2(dy2-sy,dx2-sx)*180/Math.PI;
+ const a=document.createElement('div');
+ a.style.cssText=`position:fixed;z-index:40;pointer-events:none;left:${sx}px;top:${sy-3}px;width:${L}px;height:6px;background:#e08a1e;border-radius:3px;transform-origin:0 50%;transform:rotate(${ang}deg);`;
+ const head=document.createElement('div');
+ head.style.cssText='position:absolute;right:-6px;top:-9px;width:0;height:0;border-top:12px solid transparent;border-bottom:12px solid transparent;border-left:16px solid #e08a1e;';
+ a.append(head);document.body.append(a);
+ a.animate([{transform:`rotate(${ang}deg) scaleX(0)`,opacity:1},{transform:`rotate(${ang}deg) scaleX(1)`,opacity:1,offset:.45},{transform:`rotate(${ang}deg) scaleX(1)`,opacity:1,offset:.8},{transform:`rotate(${ang}deg) scaleX(1)`,opacity:0}],{duration:1000,easing:'ease-out'}).onfinish=()=>a.remove();
+ el.animate([{transform:`translate(${sx-dx2}px,${sy-dy2}px)`,opacity:.9},{transform:'none',opacity:1}],{duration:650,delay:300,easing:'ease-in-out',fill:'backwards'});
+}
+function setMsg(t){$('msg').className='msg';$('msg').textContent=t;}
+function shake(el){el.classList.remove('shake');void el.offsetWidth;el.classList.add('shake');}
+function check(){
+ const cur=steps[idx];if(!cur||cur.k==='up')return;
+ if(cur.k==='q'){
+  const el=$('inQ');const v=el.value.replace(/\D/g,'');if(v==='')return;const x=+v;
+  if(x===cur.want){idx++;setMsg('');render();return;}
+  el.value='';shake(el);
+  if(x*d>cur.cur)setMsg(`${x} \u00D7 ${d} = ${x*d} is too big for ${cur.cur}.`);
+  else setMsg(`${x} \u00D7 ${d} = ${x*d}. More ${d}s fit in ${cur.cur}.`);
+  return;}
+ const el=$('inNum');const v=el.value.replace(/\D/g,'');if(v==='')return;
+ if(+v===cur.want){idx++;setMsg('');render();return;}
+ el.value='';shake(el);
+ setMsg(cur.k==='p'?`Not quite. ${cur.q} \u00D7 ${d} = ?`:`Not quite. ${cur.cur} \u2212 ${cur.pr} = ?`);
+}
+$('chk').onclick=check;
+$('undo').onclick=()=>{if(idx>0){idx--;setMsg('');render();}};
+function newProblem(){
+ const r=(lo,hi)=>lo+Math.floor(Math.random()*(hi-lo+1));
+ let a,b;
+ do{b=r(5,50);a=Math.random()<.5?r(100,999):r(1000,9999);if(Math.random()<.4)a-=a%b;}while(a<100||a<5*b);
+ setup(a,b);
+}
+$('next').onclick=newProblem;
+newProblem();
+})();
+</script></body></html>
