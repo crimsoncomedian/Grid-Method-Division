@@ -45,7 +45,7 @@ h1{font-size:clamp(22px,4vw,30px);margin:0 0 6px;text-align:center}.sub{color:#5
 :root{--gw:116px}
 .app{max-width:720px}
 .gd{display:grid;justify-content:center;align-items:stretch;margin:10px auto;font-variant-numeric:tabular-nums}
-.gd .dvs{grid-column:1;grid-row:2 / span 3;display:flex;align-items:center;justify-content:center;padding:0 16px 0 4px;font-size:56px;font-weight:800}
+.gd .dvs{grid-column:1;grid-row:2;display:flex;align-items:center;justify-content:flex-end;padding:0 14px 0 4px;font-size:42px;font-weight:800}
 .gd .q{display:flex;align-items:center;justify-content:center;height:62px;font-size:44px;font-weight:800;color:#18253a}
 .gd .gc{display:flex;align-items:center;justify-content:flex-end;gap:6px;height:62px;padding:0 12px;font-size:42px;font-weight:800;border-left:3px solid #18253a;border-right:3px solid #18253a;background:#fff}
 .gd .gc.top{border-top:3px solid #18253a}
@@ -53,12 +53,15 @@ h1{font-size:clamp(22px,4vw,30px);margin:0 0 6px;text-align:center}.sub{color:#5
 .gd .gc.bot{border-bottom:3px solid #18253a;color:#5144c6}
 .gd .gc.hl{background:#eeeafe}
 .gd .gc .sn{margin-right:auto;font-size:28px;color:#5e6d81;font-weight:700}
-.gd .pre{display:inline-flex;align-items:center;justify-content:center;min-width:34px;height:34px;padding:0 5px;font-size:20px;font-weight:800;border:2px solid #e08a1e;border-radius:8px;background:#fff8ee;color:#a35d0b;align-self:flex-start;margin-top:6px}
+.gd .pre{color:#5144c6;margin-right:3px}
 .gd .gc.bot.bring{cursor:pointer;background:#fff8ee;color:#a35d0b}
 .gd input{width:100%;height:50px;font-size:34px;font-weight:800;text-align:right;padding:0 8px;border:3px solid #5144c6;border-radius:10px;background:#fff;font-family:inherit;font-variant-numeric:tabular-nums}
 .gd input.qi{text-align:center;padding:0;width:62px;border-color:#e08a1e;background:#fff8ee}
 .gd input:focus{outline:3px solid #b6aef5;outline-offset:1px}
-.gd .fg{display:flex;align-items:center;justify-content:center;height:44px}
+.gd .fg{display:flex;align-items:flex-start;justify-content:flex-end;height:44px;padding-right:12px}
+.fnum{position:relative;display:inline-block;height:44px}
+.fnum .gh{visibility:hidden;font-size:42px;font-weight:800;line-height:1}
+.fnum .hand{position:absolute;left:calc(50% - 16px);top:0}
 .hand{font-size:30px;line-height:1;animation:bob 1s ease-in-out infinite}
 @keyframes bob{0%,100%{transform:translateY(5px)}50%{transform:translateY(-4px)}}
 .shake{animation:wig .4s}
@@ -69,7 +72,7 @@ h1{font-size:clamp(22px,4vw,30px);margin:0 0 6px;text-align:center}.sub{color:#5
 .chk:disabled{opacity:.4;cursor:not-allowed}
 [hidden]{display:none!important}
 .help b{color:#18253a}
-@media(max-width:560px){:root{--gw:64px}.gd .gc{font-size:30px;padding:0 6px}.gd .q{font-size:34px}.gd .dvs{font-size:40px;padding:0 8px 0 0}.gd input{font-size:26px;height:44px}.gd input.qi{width:50px}.gd .pre{min-width:26px;height:26px;font-size:15px}.gd .gc .sn{font-size:20px}}
+@media(max-width:560px){:root{--gw:64px}.fnum .gh{font-size:30px}.gd .fg{padding-right:6px}.gd .gc{font-size:30px;padding:0 6px}.gd .q{font-size:34px}.gd .dvs{font-size:30px;padding:0 8px 0 0}.gd input{font-size:26px;height:44px}.gd input.qi{width:50px}.gd .gc .sn{font-size:20px}}
 </style>
 </head>
 <body><main class="app">
@@ -110,7 +113,7 @@ function render(){
  const pre={},qv={},pv={},rv={};
  steps.slice(0,idx).forEach(s=>{if(s.k==='up')pre[s.col]=s.want;else if(s.k==='q')qv[s.col]=s.want;else if(s.k==='p')pv[s.col]=s.want;else rv[s.col]=s.want;});
  const activeCol=cur?(cur.k==='up'?cur.col:cur.col):-1;
- items.push(`<div class="dvs" style="grid-row:2 / span 3;grid-column:1">${d}</div>`);
+ items.push(`<div class="dvs" style="grid-row:2;grid-column:1">${d}</div>`);
  for(let i=0;i<nd;i++){
   const c=2+i;const hl=i===activeCol&&cur;
   // quotient row
@@ -132,7 +135,7 @@ function render(){
   if(cur&&cur.k==='up'&&cur.col-1===i){bring=true;}
   add(4,c,rem,`gc bot${hl?' hl':''}${bring?' bring':''}${bring?'':''}`);
   // finger under the remainder that must be brought up
-  add(5,c,bring?'<span class="hand" aria-hidden="true">\uD83D\uDC46</span>':'','fg');
+  add(5,c,bring?`<span class="fnum"><span class="gh">${rv[i]}</span><span class="hand" aria-hidden="true">\uD83D\uDC46</span></span>`:'','fg');
  }
  gd.innerHTML=items.join('');
  if(justUp){playUp(justUp);justUp=null;}
@@ -157,15 +160,15 @@ function playUp(u){
  if(matchMedia('(prefers-reduced-motion: reduce)').matches)return;
  const el=document.querySelector('#gd .pre.new');if(!el)return;
  const dst=el.getBoundingClientRect(),src=u.src;
- const sx=src.left+src.width/2,sy=src.top+src.height/2,dx2=dst.left+dst.width/2,dy2=dst.top+dst.height/2;
- const L=Math.hypot(dx2-sx,dy2-sy),ang=Math.atan2(dy2-sy,dx2-sx)*180/Math.PI;
+ const sx=src.left+src.width-26,sy=src.top+src.height/2,dx2=dst.left+dst.width/2,dy2=dst.top+dst.height/2;
+ const L=Math.max(0,Math.hypot(dx2-sx,dy2-sy)-22),ang=Math.atan2(dy2-sy,dx2-sx)*180/Math.PI;
  const a=document.createElement('div');
  a.style.cssText=`position:fixed;z-index:40;pointer-events:none;left:${sx}px;top:${sy-3}px;width:${L}px;height:6px;background:#e08a1e;border-radius:3px;transform-origin:0 50%;transform:rotate(${ang}deg);`;
  const head=document.createElement('div');
  head.style.cssText='position:absolute;right:-6px;top:-9px;width:0;height:0;border-top:12px solid transparent;border-bottom:12px solid transparent;border-left:16px solid #e08a1e;';
  a.append(head);document.body.append(a);
  a.animate([{transform:`rotate(${ang}deg) scaleX(0)`,opacity:1},{transform:`rotate(${ang}deg) scaleX(1)`,opacity:1,offset:.45},{transform:`rotate(${ang}deg) scaleX(1)`,opacity:1,offset:.8},{transform:`rotate(${ang}deg) scaleX(1)`,opacity:0}],{duration:1000,easing:'ease-out'}).onfinish=()=>a.remove();
- el.animate([{transform:`translate(${sx-dx2}px,${sy-dy2}px)`,opacity:.9},{transform:'none',opacity:1}],{duration:650,delay:300,easing:'ease-in-out',fill:'backwards'});
+ el.animate([{opacity:0},{opacity:1}],{duration:250,delay:450,fill:'backwards'});
 }
 function setMsg(t){$('msg').className='msg';$('msg').textContent=t;}
 function shake(el){el.classList.remove('shake');void el.offsetWidth;el.classList.add('shake');}
