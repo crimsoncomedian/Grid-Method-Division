@@ -80,7 +80,7 @@ h1{font-size:clamp(22px,4vw,30px);margin:0 0 6px;text-align:center}.sub{color:#5
 <h1>Grid Method: Division</h1>
 <section class="card">
  <div class="gd" id="gd"></div>
- <div class="btns" id="ctl"><button class="chk" id="chk" type="button">Check</button><button class="chk alt" id="undo" type="button">Undo</button></div>
+ <div class="btns" id="ctl"><button class="chk" id="chk" type="button">Check</button><button class="chk alt" id="show" type="button">Show me</button><button class="chk alt" id="undo" type="button">Undo</button></div>
  <div class="msg" id="msg" role="status" aria-live="polite"></div>
  <div class="help" id="help"></div>
 </section>
@@ -173,6 +173,7 @@ function playRem(u){
  const v=mk(`left:${dx-3}px;top:${dy}px;width:6px;height:${Lv}px;transform-origin:50% 100%;`);
  const head=document.createElement('div');head.style.cssText='position:absolute;left:-9px;top:-14px;width:0;height:0;border-left:12px solid transparent;border-right:12px solid transparent;border-bottom:16px solid #e08a1e;';v.append(head);
  const gone=()=>{h.remove();v.remove();};
+ setTimeout(gone,1700);
  h.animate([{transform:'scaleX(0)',opacity:1},{transform:'scaleX(1)',opacity:1,offset:.3},{transform:'scaleX(1)',opacity:1,offset:.85},{transform:'scaleX(1)',opacity:0}],{duration:1300,easing:'ease-out'}).onfinish=gone;
  v.animate([{transform:'scaleY(0)',opacity:1},{transform:'scaleY(0)',opacity:1,offset:.28},{transform:'scaleY(1)',opacity:1,offset:.6},{transform:'scaleY(1)',opacity:1,offset:.85},{transform:'scaleY(1)',opacity:0}],{duration:1300,easing:'ease-out'});
  el.animate([{opacity:0},{opacity:1}],{duration:250,delay:800,fill:'backwards'});
@@ -187,7 +188,7 @@ function playUp(u){
  a.style.cssText=`position:fixed;z-index:40;pointer-events:none;left:${sx}px;top:${sy-3}px;width:${L}px;height:6px;background:#e08a1e;border-radius:3px;transform-origin:0 50%;transform:rotate(${ang}deg);`;
  const head=document.createElement('div');
  head.style.cssText='position:absolute;right:-6px;top:-9px;width:0;height:0;border-top:12px solid transparent;border-bottom:12px solid transparent;border-left:16px solid #e08a1e;';
- a.append(head);document.body.append(a);
+ a.append(head);document.body.append(a);setTimeout(()=>a.remove(),1500);
  a.animate([{transform:`rotate(${ang}deg) scaleX(0)`,opacity:1},{transform:`rotate(${ang}deg) scaleX(1)`,opacity:1,offset:.45},{transform:`rotate(${ang}deg) scaleX(1)`,opacity:1,offset:.8},{transform:`rotate(${ang}deg) scaleX(1)`,opacity:0}],{duration:1000,easing:'ease-out'}).onfinish=()=>a.remove();
  el.animate([{opacity:0},{opacity:1}],{duration:250,delay:450,fill:'backwards'});
 }
@@ -207,7 +208,13 @@ function check(){
  el.value='';shake(el);
  setMsg(cur.k==='p'?`Not quite. ${cur.q} \u00D7 ${d} = ?`:`Not quite. ${cur.cur} \u2212 ${cur.pr} = ?`);
 }
-$('chk').onclick=check;
+function showMe(){
+ const cur=steps[idx];if(!cur)return;setMsg('');
+ if(cur.k==='up'||cur.k==='rem'){const br=document.querySelector('#gd .gc.bot.bring');if(br)br.click();return;}
+ const el=cur.k==='q'?$('inQ'):$('inNum');if(!el)return;
+ el.value=String(cur.want);check();
+}
+$('chk').onclick=check;$('show').onclick=showMe;
 $('undo').onclick=()=>{if(idx>0){idx--;setMsg('');render();}};
 function newProblem(){
  const r=(lo,hi)=>lo+Math.floor(Math.random()*(hi-lo+1));
