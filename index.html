@@ -46,7 +46,7 @@ h1{font-size:clamp(22px,4vw,30px);margin:0 0 6px;text-align:center}.sub{color:#5
 .app{max-width:720px}
 .gd{display:grid;justify-content:center;align-items:stretch;margin:10px auto;font-variant-numeric:tabular-nums}
 .gd .dvs{grid-column:1;grid-row:2;display:flex;align-items:center;justify-content:flex-end;padding:0 14px 0 4px;font-size:42px;font-weight:800}
-.gd .q{display:flex;align-items:center;justify-content:center;height:62px;font-size:44px;font-weight:800;color:#18253a}
+.gd .q{position:relative;display:flex;align-items:center;justify-content:center;height:62px;font-size:44px;font-weight:800;color:#18253a}
 .gd .gc{display:flex;align-items:center;justify-content:flex-end;gap:6px;height:62px;padding:0 12px;font-size:42px;font-weight:800;border-left:3px solid #18253a;border-right:3px solid #18253a;background:#fff}
 .gd .gc.top{border-top:3px solid #18253a}
 .gd .gc.mid{border-bottom:3px solid #18253a;color:#18253a}
@@ -58,6 +58,7 @@ h1{font-size:clamp(22px,4vw,30px);margin:0 0 6px;text-align:center}.sub{color:#5
 .gd input{width:100%;height:50px;font-size:34px;font-weight:800;text-align:right;padding:0 8px;border:3px solid #5144c6;border-radius:10px;background:#fff;font-family:inherit;font-variant-numeric:tabular-nums}
 .gd input.qi{text-align:center;padding:0;width:62px;border-color:#e08a1e;background:#fff8ee}
 .gd input:focus{outline:3px solid #b6aef5;outline-offset:1px}
+.gd .rr{position:absolute;left:calc(100% + 10px);top:50%;transform:translateY(-50%);font-size:34px;font-weight:800;color:#5144c6;white-space:nowrap}
 .gd .fg{display:flex;align-items:flex-start;justify-content:flex-end;height:44px;padding-right:12px}
 .fnum{position:relative;display:inline-block;height:44px}
 .fnum .gh{visibility:hidden;font-size:42px;font-weight:800;line-height:1}
@@ -72,7 +73,7 @@ h1{font-size:clamp(22px,4vw,30px);margin:0 0 6px;text-align:center}.sub{color:#5
 .chk:disabled{opacity:.4;cursor:not-allowed}
 [hidden]{display:none!important}
 .help b{color:#18253a}
-@media(max-width:560px){:root{--gw:64px}.fnum .gh{font-size:30px}.gd .fg{padding-right:6px}.gd .gc{font-size:30px;padding:0 6px}.gd .q{font-size:34px}.gd .dvs{font-size:30px;padding:0 8px 0 0}.gd input{font-size:26px;height:44px}.gd input.qi{width:50px}.gd .gc .sn{font-size:20px}}
+@media(max-width:560px){:root{--gw:64px}.gd .rr{left:auto;right:0;top:2px;transform:none;font-size:15px}.fnum .gh{font-size:30px}.gd .fg{padding-right:6px}.gd .gc{font-size:30px;padding:0 6px}.gd .q{font-size:34px}.gd .dvs{font-size:30px;padding:0 8px 0 0}.gd input{font-size:26px;height:44px}.gd input.qi{width:50px}.gd .gc .sn{font-size:20px}}
 </style>
 </head>
 <body><main class="app">
@@ -88,7 +89,7 @@ h1{font-size:clamp(22px,4vw,30px);margin:0 0 6px;text-align:center}.sub{color:#5
 <script>
 (()=>{
 const $=id=>document.getElementById(id);
-let dividend=6542,d=5,D=[],steps=[],idx=0,result={q:0,r:0},justUp=null;
+let dividend=6542,d=5,D=[],steps=[],idx=0,result={q:0,r:0},justUp=null,justRem=null;
 function build(a,b){
  const digits=String(a).split('').map(Number),st=[];let rem=0;const qs=[];
  digits.forEach((x,i)=>{
@@ -99,6 +100,7 @@ function build(a,b){
   st.push({k:'r',col:i,want:r2,cur,pr});
   qs.push(q);rem=r2;
  });
+ if(rem>0)st.push({k:'rem',want:rem});
  return {digits,steps:st,qs,rem};
 }
 function setup(a,b){
@@ -111,13 +113,14 @@ function render(){
  const items=[];const add=(row,col,html,cls='')=>items.push(`<div class="${cls}" style="grid-row:${row};grid-column:${col}">${html}</div>`);
  // gather what has been done
  const pre={},qv={},pv={},rv={};
- steps.slice(0,idx).forEach(s=>{if(s.k==='up')pre[s.col]=s.want;else if(s.k==='q')qv[s.col]=s.want;else if(s.k==='p')pv[s.col]=s.want;else rv[s.col]=s.want;});
+ let remDone=false;
+ steps.slice(0,idx).forEach(s=>{if(s.k==='rem')remDone=true;if(s.k==='up')pre[s.col]=s.want;else if(s.k==='q')qv[s.col]=s.want;else if(s.k==='p')pv[s.col]=s.want;else rv[s.col]=s.want;});
  const activeCol=cur?(cur.k==='up'?cur.col:cur.col):-1;
  items.push(`<div class="dvs" style="grid-row:2;grid-column:1">${d}</div>`);
  for(let i=0;i<nd;i++){
   const c=2+i;const hl=i===activeCol&&cur;
   // quotient row
-  if(qv[i]!==undefined)add(1,c,qv[i],'q');
+  if(qv[i]!==undefined)add(1,c,qv[i]+(i===nd-1&&remDone?`<span class="rr">R ${result.r}</span>`:''),'q');
   else if(cur&&cur.k==='q'&&cur.col===i)add(1,c,`<input class="qi" id="inQ" inputmode="numeric" maxlength="1" autocomplete="off" aria-label="Quotient digit">`,'q');
   else add(1,c,'','q');
   // number row (remainder carried up + the dividend digit)
@@ -133,28 +136,46 @@ function render(){
   if(rv[i]!==undefined){rem=`<span>${rv[i]}</span>`;}
   if(cur&&cur.k==='r'&&cur.col===i)rem=`<input id="inNum" inputmode="numeric" maxlength="2" autocomplete="off" aria-label="Remainder">`;
   if(cur&&cur.k==='up'&&cur.col-1===i){bring=true;}
+  if(cur&&cur.k==='rem'&&i===nd-1){bring=true;}
   add(4,c,rem,`gc bot${hl?' hl':''}${bring?' bring':''}${bring?'':''}`);
   // finger under the remainder that must be brought up
   add(5,c,bring?`<span class="fnum"><span class="gh">${rv[i]}</span><span class="hand" aria-hidden="true">\uD83D\uDC46</span></span>`:'','fg');
  }
  gd.innerHTML=items.join('');
  if(justUp){playUp(justUp);justUp=null;}
+ if(justRem){playRem(justRem);justRem=null;}
  const msg=$('msg');
  if(finished){msg.className='msg good';msg.textContent=`\u2713 Correct! ${dividend} \u00F7 ${d} = ${result.q}${result.r?' R '+result.r:''}. Great work!`;$('help').textContent='';}
  else{if(msg.classList.contains('good')){msg.className='msg';msg.textContent='';}
   let h='';
   if(cur.k==='up')h='Bring the remainder up.';
+  else if(cur.k==='rem')h='Show the remainder at the end of the answer.';
   else if(cur.k==='q')h=`How many <b>${d}s</b> fit in <b>${(pre[cur.col]!==undefined?String(pre[cur.col]):'')+D[cur.col]}</b>?`;
   else if(cur.k==='p')h=`<b>${cur.q} \u00D7 ${d}</b>`;
   else h=`<b>${cur.cur} \u2212 ${cur.pr}</b>`;
   $('help').innerHTML=h;}
  $('ctl').hidden=finished;$('undo').disabled=idx===0;
- $('chk').hidden=!(cur&&cur.k!=='up');
+ $('chk').hidden=!(cur&&cur.k!=='up'&&cur.k!=='rem');
  const iq=$('inQ'),inn=$('inNum');
  if(iq){iq.oninput=()=>check();iq.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();check();}};iq.focus();}
  if(inn){inn.oninput=()=>{inn.value=inn.value.replace(/\D/g,'');if(inn.value.length>=String(cur.want).length)check();};inn.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();check();}};inn.focus();}
  const br=gd.querySelector('.gc.bot.bring');
- if(br)br.onclick=()=>{justUp={src:br.getBoundingClientRect(),col:cur.col};idx++;setMsg('');render();};
+ if(br)br.onclick=()=>{if(cur.k==='rem')justRem={src:br.getBoundingClientRect()};else justUp={src:br.getBoundingClientRect(),col:cur.col};idx++;setMsg('');render();};
+}
+function playRem(u){
+ if(matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+ const el=document.querySelector('#gd .rr');if(!el)return;
+ const dst=el.getBoundingClientRect(),src=u.src;
+ const sx=src.right-8,sy=src.top+src.height/2,dx=dst.left+dst.width/2,dy=dst.bottom+6;
+ const Lh=Math.max(0,dx-sx),Lv=Math.max(0,sy-dy);
+ const mk=(css)=>{const d=document.createElement('div');d.style.cssText='position:fixed;z-index:40;pointer-events:none;background:#e08a1e;border-radius:3px;'+css;document.body.append(d);return d;};
+ const h=mk(`left:${sx}px;top:${sy-3}px;width:${Lh}px;height:6px;transform-origin:0 50%;`);
+ const v=mk(`left:${dx-3}px;top:${dy}px;width:6px;height:${Lv}px;transform-origin:50% 100%;`);
+ const head=document.createElement('div');head.style.cssText='position:absolute;left:-9px;top:-14px;width:0;height:0;border-left:12px solid transparent;border-right:12px solid transparent;border-bottom:16px solid #e08a1e;';v.append(head);
+ const gone=()=>{h.remove();v.remove();};
+ h.animate([{transform:'scaleX(0)',opacity:1},{transform:'scaleX(1)',opacity:1,offset:.3},{transform:'scaleX(1)',opacity:1,offset:.85},{transform:'scaleX(1)',opacity:0}],{duration:1300,easing:'ease-out'}).onfinish=gone;
+ v.animate([{transform:'scaleY(0)',opacity:1},{transform:'scaleY(0)',opacity:1,offset:.28},{transform:'scaleY(1)',opacity:1,offset:.6},{transform:'scaleY(1)',opacity:1,offset:.85},{transform:'scaleY(1)',opacity:0}],{duration:1300,easing:'ease-out'});
+ el.animate([{opacity:0},{opacity:1}],{duration:250,delay:800,fill:'backwards'});
 }
 function playUp(u){
  if(matchMedia('(prefers-reduced-motion: reduce)').matches)return;
@@ -173,7 +194,7 @@ function playUp(u){
 function setMsg(t){$('msg').className='msg';$('msg').textContent=t;}
 function shake(el){el.classList.remove('shake');void el.offsetWidth;el.classList.add('shake');}
 function check(){
- const cur=steps[idx];if(!cur||cur.k==='up')return;
+ const cur=steps[idx];if(!cur||cur.k==='up'||cur.k==='rem')return;
  if(cur.k==='q'){
   const el=$('inQ');const v=el.value.replace(/\D/g,'');if(v==='')return;const x=+v;
   if(x===cur.want){idx++;setMsg('');render();return;}
